@@ -35,6 +35,81 @@ namespace Syroot.NintenTools.Bfres
             UserData = new ResDict<UserData>();
         }
 
+        public void Copy(SkeletalAnim target, SkeletalAnim.CopyFilter filter)
+        {
+            if (filter.CopyBoneAnims)
+                this.BakedSize = target.BakedSize;
+            if (filter.CopySettings)
+            {
+                this.FlagsAnimSettings = target.FlagsAnimSettings;
+                this.FlagsRotate = target.FlagsRotate;
+                this.FlagsScale = target.FlagsScale;
+                this.FrameCount = target.FrameCount;
+            }
+            if (filter.CopyUserData)
+            {
+                this.UserData.Clear();
+                foreach (Syroot.NintenTools.Bfres.UserData userData in target.UserData.Values)
+                    this.UserData.Add(userData.Name, userData.Copy());
+            }
+            if (!filter.CopyBoneAnims)
+                return;
+            this.BindSkeleton = target.BindSkeleton;
+            this.BindIndices = target.BindIndices;
+            this.BoneAnims.Clear();
+            int index1 = 0;
+            while (true)
+            {
+                int num1 = index1;
+                int? count1 = target.BoneAnims?.Count;
+                int valueOrDefault1 = count1.GetValueOrDefault();
+                if (num1 < valueOrDefault1 & count1.HasValue)
+                {
+                    List<AnimCurve> animCurveList = new List<AnimCurve>();
+                    int index2 = 0;
+                    while (true)
+                    {
+                        int num2 = index2;
+                        int? count2 = target.BoneAnims[index1].Curves?.Count;
+                        int valueOrDefault2 = count2.GetValueOrDefault();
+                        if (num2 < valueOrDefault2 & count2.HasValue)
+                        {
+                            animCurveList.Add(target.BoneAnims[index1].Curves[index2].Copy());
+                            ++index2;
+                        }
+                        else
+                            break;
+                    }
+                    this.BoneAnims.Add(new BoneAnim()
+                    {
+                        Name = target.BoneAnims[index1].Name,
+                        Curves = (IList<AnimCurve>)animCurveList,
+                        FlagsBase = target.BoneAnims[index1].FlagsBase,
+                        FlagsCurve = target.BoneAnims[index1].FlagsCurve,
+                        FlagsTransform = target.BoneAnims[index1].FlagsTransform,
+                        BeginBaseTranslate = target.BoneAnims[index1].BeginBaseTranslate,
+                        BeginCurve = target.BoneAnims[index1].BeginCurve,
+                        BeginRotate = target.BoneAnims[index1].BeginRotate,
+                        BeginTranslate = target.BoneAnims[index1].BeginTranslate,
+                        UseRotation = target.BoneAnims[index1].UseRotation,
+                        UseScale = target.BoneAnims[index1].UseScale,
+                        UseTranslation = target.BoneAnims[index1].UseTranslation,
+                        BaseData = new BoneAnimData()
+                        {
+                            Translate = target.BoneAnims[index1].BaseData.Translate,
+                            Flags = target.BoneAnims[index1].BaseData.Flags,
+                            Padding = target.BoneAnims[index1].BaseData.Padding,
+                            Rotate = target.BoneAnims[index1].BaseData.Rotate,
+                            Scale = target.BoneAnims[index1].BaseData.Scale
+                        }
+                    });
+                    ++index1;
+                }
+                else
+                    break;
+            }
+        }
+
         // ---- CONSTANTS ----------------------------------------------------------------------------------------------
 
         private const string _signature = "FSKA";
@@ -222,8 +297,8 @@ namespace Syroot.NintenTools.Bfres
         private void ReplaceYaml(string FileName, ResFile ResFile)
         {
             var serializer = new Serializer();
-            var obj = serializer.Deserialize(new FileStream(FileName,FileMode.Open));
-            
+            var obj = serializer.Deserialize(new FileStream(FileName, FileMode.Open));
+
         }
 
         // ---- METHODS ------------------------------------------------------------------------------------------------
@@ -309,8 +384,16 @@ namespace Syroot.NintenTools.Bfres
             PosBindIndicesOffset = saver.SaveOffsetPos();
             PosUserDataOffset = saver.SaveOffsetPos();
         }
+
+        public class CopyFilter
+        {
+            public bool CopySettings = true;
+            public bool CopyBoneAnims = true;
+            public bool CopyUserData = true;
+            public bool CopyBaseData = true;
+        }
     }
-    
+
     /// <summary>
     /// Represents flags specifying how animation data is stored or should be played.
     /// </summary>
@@ -370,4 +453,3 @@ namespace Syroot.NintenTools.Bfres
         EulerXYZ = 1 << 12
     }
 }
- 
