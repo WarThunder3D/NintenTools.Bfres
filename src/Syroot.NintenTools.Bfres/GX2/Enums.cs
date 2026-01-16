@@ -501,11 +501,11 @@ namespace Syroot.NintenTools.Bfres.GX2
     /// </summary>
     public enum GX2TexAnisoRatio : uint
     {
-        OneToOne,
-        TwoToOne,
-        FourToOne,
-        EightToOne,
-        SixteenToOne
+        Ratio_1_1,
+        Ratio_2_1,
+        Ratio_4_1,
+        Ratio_8_1,
+        Ratio_16_1,
     }
 
     /// <summary>
