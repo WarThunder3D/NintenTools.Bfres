@@ -30,6 +30,15 @@ namespace Syroot.NintenTools.Bfres.Helpers
         /// <see cref="Vector4F"/> elements is used.
         /// </summary>
         public Vector4F[] Data;
+        private uint stride = 0;
+
+        public byte BufferIndex { get; set; }
+
+        public uint Stride
+        {
+            get => this.stride == 0U ? (uint)this.FormatSize : this.stride;
+            set => this.stride = value;
+        }
 
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
 
@@ -102,8 +111,9 @@ namespace Syroot.NintenTools.Bfres.Helpers
                     case GX2AttribFormat.Format_32_32_32_32_SInt:
                     case GX2AttribFormat.Format_32_32_32_32_Single:
                         return 16;
-                    default: throw new ArgumentException($"Invalid {nameof(GX2AttribFormat)} {Format}.",
-                        nameof(Format));
+                    default:
+                        throw new ArgumentException($"Invalid {nameof(GX2AttribFormat)} {Format}.",
+                   nameof(Format));
                 }
             }
         }
