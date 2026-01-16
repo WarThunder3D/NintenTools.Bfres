@@ -41,7 +41,7 @@ namespace Syroot.NintenTools.Bfres.GX2
             MinFilter = GX2TexXYFilterType.Bilinear;
             ZFilter = GX2TexZFilterType.Linear;
             MipFilter = GX2TexMipFilterType.Linear;
-            MaxAnisotropicRatio = GX2TexAnisoRatio.OneToOne;
+            MaxAnisotropicRatio = GX2TexAnisoRatio.Ratio_1_1;
             BorderType = GX2TexBorderType.ClearBlack;
             DepthCompareFunc = GX2CompareFunction.Never;
             LodBias = 0;
