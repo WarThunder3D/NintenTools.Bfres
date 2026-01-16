@@ -20,10 +20,10 @@ namespace Syroot.NintenTools.Bfres
         {
             Name = "";
             UserData = new ResDict<UserData>();
-            ParentIndex = ushort.MaxValue;
+            ParentIndex = -1;
             SmoothMatrixIndex = -1;
             RigidMatrixIndex = -1;
-            BillboardIndex = ushort.MaxValue;
+            BillboardIndex = -1;
 
             Scale = new Vector3F(1, 1, 1);
             Rotation = new Vector4F(0, 0, 0, 0);
@@ -59,7 +59,7 @@ namespace Syroot.NintenTools.Bfres
         /// <summary>
         /// Gets or sets the index of the parent <see cref="Bone"/> this instance is a child of.
         /// </summary>
-        public ushort ParentIndex { get; set; }
+        public short ParentIndex { get; set; }
 
         /// <summary>
         /// Gets or sets the index of a matrix used for smooth skinning.
@@ -71,7 +71,7 @@ namespace Syroot.NintenTools.Bfres
         /// </summary>
         public short RigidMatrixIndex { get; set; }
 
-        public ushort BillboardIndex { get; set; }
+        public short BillboardIndex { get; set; }
 
         /// <summary>
         /// Gets or sets flags controlling bone behavior.
@@ -329,10 +329,10 @@ namespace Syroot.NintenTools.Bfres
         {
             Name = loader.LoadString();
             ushort idx = loader.ReadUInt16();
-            ParentIndex = loader.ReadUInt16();
+            ParentIndex = loader.ReadInt16();
             SmoothMatrixIndex = loader.ReadInt16();
             RigidMatrixIndex = loader.ReadInt16();
-            BillboardIndex = loader.ReadUInt16();
+            BillboardIndex = loader.ReadInt16();
             ushort numUserData = loader.ReadUInt16();
             _flags = loader.ReadUInt32();
             Scale = loader.ReadVector3F();
