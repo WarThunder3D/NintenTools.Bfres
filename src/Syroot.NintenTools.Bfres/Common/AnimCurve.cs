@@ -127,6 +127,30 @@ namespace Syroot.NintenTools.Bfres
             }
         }
 
+        public AnimCurve Copy()
+        {
+            AnimCurve animCurve = new AnimCurve();
+            animCurve._flags = this._flags;
+            animCurve.AnimDataOffset = this.AnimDataOffset;
+            animCurve.CurveType = this.CurveType;
+            animCurve.FrameType = this.FrameType;
+            animCurve.Delta = this.Delta;
+            animCurve.EndFrame = this.EndFrame;
+            animCurve.StartFrame = this.StartFrame;
+            animCurve.Offset = this.Offset;
+            animCurve.Scale = this.Scale;
+            animCurve.Frames = new float[this.Frames.Length];
+            animCurve.Keys = new float[this.Keys.Length / this.ElementsPerKey, this.ElementsPerKey];
+            for (int index = 0; index < this.Frames.Length; ++index)
+                animCurve.Frames[index] = this.Frames[index];
+            for (int index1 = 0; index1 < this.Keys.Length / this.ElementsPerKey; ++index1)
+            {
+                for (int index2 = 0; index2 < this.ElementsPerKey; ++index2)
+                    animCurve.Keys[index1, index2] = this.Keys[index1, index2];
+            }
+            return animCurve;
+        }
+
         // ---- METHODS ------------------------------------------------------------------------------------------------
 
         void IResData.Load(ResFileLoader loader)
@@ -204,7 +228,7 @@ namespace Syroot.NintenTools.Bfres
                     KeyBool >>= 1;
 
                     KeyStepBoolData[i] = set;
-                }           
+                }
             }
             else
             {
