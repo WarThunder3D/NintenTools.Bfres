@@ -24,7 +24,7 @@ namespace Syroot.NintenTools.Bfres
         // ---- FIELDS -------------------------------------------------------------------------------------------------
 
         private object _value;
-        
+
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
 
         /// <summary>
@@ -127,6 +127,31 @@ namespace Syroot.NintenTools.Bfres
             _value = value;
         }
 
+        public UserData Copy()
+        {
+            UserData userData = new UserData();
+            userData.Name = this.Name;
+            switch (this.Type)
+            {
+                case UserDataType.Int32:
+                    userData.SetValue(this.GetValueInt32Array());
+                    break;
+                case UserDataType.Single:
+                    userData.SetValue(this.GetValueSingleArray());
+                    break;
+                case UserDataType.String:
+                    userData.SetValue(this.GetValueStringArray());
+                    break;
+                case UserDataType.WString:
+                    userData.SetValue(this.GetValueStringArray());
+                    break;
+                case UserDataType.Byte:
+                    userData.SetValue(this.GetValueByteArray());
+                    break;
+            }
+            return userData;
+        }
+
         // ---- METHODS ------------------------------------------------------------------------------------------------
 
         void IResData.Load(ResFileLoader loader)
@@ -154,7 +179,7 @@ namespace Syroot.NintenTools.Bfres
                     break;
             }
         }
-        
+
         void IResData.Save(ResFileSaver saver)
         {
             saver.SaveString(Name);
