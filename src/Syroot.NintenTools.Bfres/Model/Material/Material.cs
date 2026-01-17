@@ -37,7 +37,7 @@ namespace Syroot.NintenTools.Bfres
         // ---- CONSTANTS ----------------------------------------------------------------------------------------------
 
         private const string _signature = "FMAT";
-        
+
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
 
         /// <summary>
@@ -173,6 +173,7 @@ namespace Syroot.NintenTools.Bfres
             PosSamplerDictOffset = saver.SaveOffsetPos();
             PosShaderParamsOffset = saver.SaveOffsetPos();
             PosShaderParamDictOffset = saver.SaveOffsetPos();
+            PosShaderParamDataOffset = saver.SaveOffsetPos();
             PosUserDataMaterialOffset = saver.SaveOffsetPos();
             if (saver.ResFile.Version >= 0x03030000)
                 PosVolatileFlagsOffset = saver.SaveOffsetPos();
