@@ -84,9 +84,9 @@ namespace Syroot.NintenTools.Bfres
             BaseDataList = loader.LoadCustom(() => loader.ReadUInt16s(numPatAnim));
         }
 
-        internal long PosPatternAnimInfosOffset;
-        internal long PosCurvessOffset;
-        internal long PosBaseDataListOffset;
+        internal ResSavedPos PosPatternAnimInfosOffset = new ResSavedPos();
+        internal ResSavedPos PosCurvessOffset = new ResSavedPos();
+        internal ResSavedPos PosBaseDataListOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -95,9 +95,9 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(BeginCurve);
             saver.Write(BeginPatAnim);
             saver.SaveString(Name);
-            PosPatternAnimInfosOffset = saver.SaveOffsetPos();
-            PosCurvessOffset = saver.SaveOffsetPos();
-            PosBaseDataListOffset = saver.SaveOffsetPos();
+            PosPatternAnimInfosOffset.Value = (uint)saver.SaveOffsetPos();
+            PosCurvessOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBaseDataListOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
 }

@@ -46,9 +46,9 @@ namespace Syroot.NintenTools.Bfres
             ShaderOptions = loader.LoadDict<ResString>();
         }
 
-        internal long PosAttribAssigns;
-        internal long PosSamplerAssigns;
-        internal long PosShaderOptions;
+        internal ResSavedPos PosAttribAssigns = new ResSavedPos();
+        internal ResSavedPos PosSamplerAssigns = new ResSavedPos();
+        internal ResSavedPos PosShaderOptions = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -58,9 +58,9 @@ namespace Syroot.NintenTools.Bfres
             saver.Write((byte)AttribAssigns.Count);
             saver.Write((byte)SamplerAssigns.Count);
             saver.Write((ushort)ShaderOptions.Count);
-            PosAttribAssigns = saver.SaveOffsetPos();
-            PosSamplerAssigns = saver.SaveOffsetPos();
-            PosShaderOptions = saver.SaveOffsetPos();
+            PosAttribAssigns.Value = (uint)saver.SaveOffsetPos();
+            PosSamplerAssigns.Value = (uint)saver.SaveOffsetPos();
+            PosShaderOptions.Value = (uint)saver.SaveOffsetPos();
         }
     }
 }

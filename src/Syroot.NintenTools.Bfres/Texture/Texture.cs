@@ -341,7 +341,7 @@ namespace Syroot.NintenTools.Bfres
             loader.Seek(2);
         }
 
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -413,7 +413,7 @@ namespace Syroot.NintenTools.Bfres
                     break;
             }
 
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write((ushort)UserData.Count);
             saver.Seek(2);
         }

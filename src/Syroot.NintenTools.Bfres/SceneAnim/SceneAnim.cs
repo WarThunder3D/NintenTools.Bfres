@@ -103,10 +103,10 @@ namespace Syroot.NintenTools.Bfres
             }
         }
 
-        internal long PosCameraAnimArrayOffset;
-        internal long PosLightAnimArrayOffset;
-        internal long PosFogAnimArrayOffset;
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosCameraAnimArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosLightAnimArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosFogAnimArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -117,10 +117,10 @@ namespace Syroot.NintenTools.Bfres
             saver.Write((ushort)CameraAnims.Count);
             saver.Write((ushort)LightAnims.Count);
             saver.Write((ushort)FogAnims.Count);
-            PosCameraAnimArrayOffset = saver.SaveOffsetPos();
-            PosLightAnimArrayOffset = saver.SaveOffsetPos();
-            PosFogAnimArrayOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosCameraAnimArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosLightAnimArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosFogAnimArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
 }

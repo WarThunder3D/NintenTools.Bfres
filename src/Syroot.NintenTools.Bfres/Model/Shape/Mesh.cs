@@ -192,8 +192,8 @@ namespace Syroot.NintenTools.Bfres
             FirstVertex = loader.ReadUInt32();
         }
 
-        internal long PosSubMeshesOffset;
-        internal long PosBufferOffset;
+        internal ResSavedPos PosSubMeshesOffset = new ResSavedPos();
+        internal ResSavedPos PosBufferOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -202,8 +202,8 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(IndexCount);
             saver.Write((ushort)SubMeshes.Count);
             saver.Seek(2);
-            PosSubMeshesOffset = saver.SaveOffsetPos();
-            PosBufferOffset = saver.SaveOffsetPos();
+            PosSubMeshesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBufferOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write(FirstVertex);
         }
     }

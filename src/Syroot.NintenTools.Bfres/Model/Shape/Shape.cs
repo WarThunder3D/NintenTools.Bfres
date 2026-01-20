@@ -231,14 +231,15 @@ namespace Syroot.NintenTools.Bfres
             uint userPointer = loader.ReadUInt32();
         }
 
-        internal long PosMeshArrayOffset;
-        internal long PosSkinBoneIndicesOffset;
-        internal long PosKeyShapesOffset;
-        internal long PosSubMeshBoundingNodesOffset;
-        internal long PosSubMeshBoundingsOffset;
-        internal long PosSubMeshBoundingsIndicesOffset;
-        internal long PosRadiusArrayOffset;
-
+        internal ResSavedPos PosMeshArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosSkinBoneIndicesOffset = new ResSavedPos();
+        internal ResSavedPos PosKeyShapesOffset = new ResSavedPos();
+        internal ResSavedPos PosSubMeshBoundingNodesOffset = new ResSavedPos();
+        internal ResSavedPos PosSubMeshBoundingsOffset = new ResSavedPos();
+        internal ResSavedPos PosSubMeshBoundingsIndicesOffset = new ResSavedPos();
+        internal ResSavedPos PosRadiusArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosVertexBufferOffset = new ResSavedPos();
+        
         void IResData.Save(ResFileSaver saver)
         {
             saver.WriteSignature(_signature);
@@ -256,25 +257,25 @@ namespace Syroot.NintenTools.Bfres
             saver.Write((ushort)SubMeshBoundingNodes?.Count);
             if (saver.ResFile.Version >= 0x04050000)
             {
-                PosRadiusArrayOffset = saver.SaveOffsetPos();
+                PosRadiusArrayOffset.Value = (uint)saver.SaveOffsetPos();
             }
             else
             {
                 saver.Write(RadiusArray);
             }
-            saver.Write((uint)VertexBuffer.Position);
-            PosMeshArrayOffset = saver.SaveOffsetPos();
-            PosSkinBoneIndicesOffset = saver.SaveOffsetPos();
-            PosKeyShapesOffset = saver.SaveOffsetPos();
+            PosVertexBufferOffset.Value = (uint)saver.SaveOffsetPos();
+            PosMeshArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosSkinBoneIndicesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosKeyShapesOffset.Value = (uint)saver.SaveOffsetPos();
             if (SubMeshBoundingNodes.Count == 0)
             {
-                PosSubMeshBoundingNodesOffset = saver.SaveOffsetPos();
+                PosSubMeshBoundingNodesOffset.Value = (uint)saver.SaveOffsetPos();
             }
             else
             {
-                PosSubMeshBoundingNodesOffset = saver.SaveOffsetPos();
-                PosSubMeshBoundingsOffset = saver.SaveOffsetPos();
-                PosSubMeshBoundingsIndicesOffset = saver.SaveOffsetPos();
+                PosSubMeshBoundingNodesOffset.Value = (uint)saver.SaveOffsetPos();
+                PosSubMeshBoundingsOffset.Value = (uint)saver.SaveOffsetPos();
+                PosSubMeshBoundingsIndicesOffset.Value = (uint)saver.SaveOffsetPos();
             }
             saver.Write(0); // UserPointer
         }

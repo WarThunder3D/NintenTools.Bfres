@@ -350,10 +350,10 @@ namespace Syroot.NintenTools.Bfres
             }
         }
 
-        internal long PosBindModelOffset;
-        internal long PosBindIndicesOffset;
-        internal long PosBoneAnimsOffset;
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosBindModelOffset = new ResSavedPos();
+        internal ResSavedPos PosBindIndicesOffset = new ResSavedPos();
+        internal ResSavedPos PosBoneAnimsOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -379,10 +379,10 @@ namespace Syroot.NintenTools.Bfres
                 saver.Seek(4);
             }
 
-            PosBoneAnimsOffset = saver.SaveOffsetPos();
-            PosBindModelOffset = saver.SaveOffsetPos();
-            PosBindIndicesOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosBoneAnimsOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBindModelOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBindIndicesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
         }
 
         public class CopyFilter

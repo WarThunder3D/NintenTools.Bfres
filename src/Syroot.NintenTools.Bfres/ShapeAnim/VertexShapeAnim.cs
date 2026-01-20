@@ -89,9 +89,9 @@ namespace Syroot.NintenTools.Bfres
         }
 
 
-        internal long PosKeyShapeAnimInfosOffset;
-        internal long PosCurvessOffset;
-        internal long PosBaseDataListOffset;
+        internal ResSavedPos PosKeyShapeAnimInfosOffset = new ResSavedPos();
+        internal ResSavedPos PosCurvessOffset = new ResSavedPos();
+        internal ResSavedPos PosBaseDataListOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -111,9 +111,9 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(BeginCurve);
             saver.Write(BeginKeyShapeAnim);
             saver.SaveString(Name);
-            PosKeyShapeAnimInfosOffset = saver.SaveOffsetPos();
-            PosCurvessOffset = saver.SaveOffsetPos();
-            PosBaseDataListOffset = saver.SaveOffsetPos();
+            PosKeyShapeAnimInfosOffset.Value = (uint)saver.SaveOffsetPos();
+            PosCurvessOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBaseDataListOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
 }

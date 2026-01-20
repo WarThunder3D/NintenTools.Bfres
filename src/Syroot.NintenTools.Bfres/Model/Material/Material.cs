@@ -87,6 +87,8 @@ namespace Syroot.NintenTools.Bfres
         // TODO: Wrap into a bool array.
         public byte[] VolatileFlags { get; set; }
 
+        private ushort VolatileParamCount;
+
         // TODO: Methods to access ShaderParam variable values.
 
         // ---- METHODS ------------------------------------------------------------------------------------------------
@@ -118,7 +120,7 @@ namespace Syroot.NintenTools.Bfres
             byte numSampler = loader.ReadByte();
             byte numTextureRef = loader.ReadByte();
             ushort numShaderParam = loader.ReadUInt16();
-            ushort numShaderParamVolatile = loader.ReadUInt16();
+            VolatileParamCount = loader.ReadUInt16();
             ushort sizParamSource = loader.ReadUInt16();
             ushort sizParamRaw = loader.ReadUInt16();
             ushort numUserData = loader.ReadUInt16();
@@ -135,18 +137,18 @@ namespace Syroot.NintenTools.Bfres
             VolatileFlags = loader.LoadCustom(() => loader.ReadBytes((int)Math.Ceiling(numShaderParam / 8f)));
             uint userPointer = loader.ReadUInt32();
         }
-
-        internal long PosRenderInfoOffset;
-        internal long PosRenderStateOffset;
-        internal long PosShaderAssignOffset;
-        internal long PosTextureRefsOffset;
-        internal long PosSamplersOffset;
-        internal long PosSamplerDictOffset;
-        internal long PosShaderParamsOffset;
-        internal long PosShaderParamDictOffset;
-        internal long PosShaderParamDataOffset;
-        internal long PosUserDataMaterialOffset;
-        internal long PosVolatileFlagsOffset;
+        
+        internal ResSavedPos PosRenderInfoOffset = new ResSavedPos();
+        internal ResSavedPos PosRenderStateOffset = new ResSavedPos();
+        internal ResSavedPos PosShaderAssignOffset = new ResSavedPos();
+        internal ResSavedPos PosTextureRefsOffset = new ResSavedPos();
+        internal ResSavedPos PosSamplersOffset = new ResSavedPos();
+        internal ResSavedPos PosSamplerDictOffset = new ResSavedPos();
+        internal ResSavedPos PosShaderParamsOffset = new ResSavedPos();
+        internal ResSavedPos PosShaderParamDictOffset = new ResSavedPos();
+        internal ResSavedPos PosShaderParamDataOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataMaterialOffset = new ResSavedPos();
+        internal ResSavedPos PosVolatileFlagsOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -159,24 +161,24 @@ namespace Syroot.NintenTools.Bfres
             saver.Write((byte)TextureRefs.Count);
             saver.Write((ushort)ShaderParams.Count);
             if (saver.ResFile.Version >= 0x03030000)
-                saver.Write((ushort)VolatileFlags.Length);
+                saver.Write(VolatileParamCount);
             else
                 saver.Write((ushort)TextureRefs.Count);
             saver.Write((ushort)ShaderParamData.Length);
             saver.Write((ushort)0); // SizParamRaw
             saver.Write((ushort)UserData.Count);
-            PosRenderInfoOffset = saver.SaveOffsetPos();
-            PosRenderStateOffset = saver.SaveOffsetPos();
-            PosShaderAssignOffset = saver.SaveOffsetPos();
-            PosTextureRefsOffset = saver.SaveOffsetPos();
-            PosSamplersOffset = saver.SaveOffsetPos();
-            PosSamplerDictOffset = saver.SaveOffsetPos();
-            PosShaderParamsOffset = saver.SaveOffsetPos();
-            PosShaderParamDictOffset = saver.SaveOffsetPos();
-            PosShaderParamDataOffset = saver.SaveOffsetPos();
-            PosUserDataMaterialOffset = saver.SaveOffsetPos();
+            PosRenderInfoOffset.Value = (uint)saver.SaveOffsetPos();
+            PosRenderStateOffset.Value = (uint)saver.SaveOffsetPos();
+            PosShaderAssignOffset.Value = (uint)saver.SaveOffsetPos();
+            PosTextureRefsOffset.Value = (uint)saver.SaveOffsetPos();
+            PosSamplersOffset.Value = (uint)saver.SaveOffsetPos();
+            PosSamplerDictOffset.Value = (uint)saver.SaveOffsetPos();
+            PosShaderParamsOffset.Value = (uint)saver.SaveOffsetPos();
+            PosShaderParamDictOffset.Value = (uint)saver.SaveOffsetPos();
+            PosShaderParamDataOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataMaterialOffset.Value = (uint)saver.SaveOffsetPos();
             if (saver.ResFile.Version >= 0x03030000)
-                PosVolatileFlagsOffset = saver.SaveOffsetPos();
+                PosVolatileFlagsOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write(0); // UserPointer
         }
     }

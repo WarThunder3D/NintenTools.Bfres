@@ -20,8 +20,8 @@ namespace Syroot.NintenTools.Bfres
         
         void IResData.Save(ResFileSaver saver)
         {
-            saver.SaveCustom(TargetAttribIndices, () => saver.Write(TargetAttribIndices));
-            saver.SaveCustom(TargetAttribIndexOffsets, () => saver.Write(TargetAttribIndexOffsets));
+            saver.SaveCustom(TargetAttribIndices, () => saver.Write(TargetAttribIndices), null);
+            saver.SaveCustom(TargetAttribIndexOffsets, () => saver.Write(TargetAttribIndexOffsets), null);
         }
     }
 }

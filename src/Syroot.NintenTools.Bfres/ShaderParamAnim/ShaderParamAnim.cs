@@ -162,10 +162,10 @@ namespace Syroot.NintenTools.Bfres
 
         }
 
-        internal long PosBindModelOffset;
-        internal long PosBindIndicesOffset;
-        internal long PosShaderParamMatAnimsOffset;
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosBindModelOffset = new ResSavedPos();
+        internal ResSavedPos PosBindIndicesOffset = new ResSavedPos();
+        internal ResSavedPos PosShaderParamMatAnimsOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -197,10 +197,10 @@ namespace Syroot.NintenTools.Bfres
                 saver.Write(0);
             }
 
-            PosBindModelOffset = saver.SaveOffsetPos();
-            PosBindIndicesOffset = saver.SaveOffsetPos();
-            PosShaderParamMatAnimsOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosBindModelOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBindIndicesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosShaderParamMatAnimsOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
     

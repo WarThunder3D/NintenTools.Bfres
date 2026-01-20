@@ -116,10 +116,10 @@ namespace Syroot.NintenTools.Bfres
             uint userPointer = loader.ReadUInt32();
         }
 
-        internal long PosBoneDictOffset;
-        internal long PosBoneArrayOffset;
-        internal long PosMatrixToBoneListOffset;
-        internal long PosInverseModelMatricesOffset;
+        internal ResSavedPos PosBoneDictOffset = new ResSavedPos();
+        internal ResSavedPos PosBoneArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosMatrixToBoneListOffset = new ResSavedPos();
+        internal ResSavedPos PosInverseModelMatricesOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -144,11 +144,11 @@ namespace Syroot.NintenTools.Bfres
                 saver.Write((ushort)(numRididMatrix)); // NumRigidMatrix
             }
             saver.Seek(2);
-            PosBoneDictOffset = saver.SaveOffsetPos();
-            PosBoneArrayOffset = saver.SaveOffsetPos();
-            PosMatrixToBoneListOffset = saver.SaveOffsetPos();
+            PosBoneDictOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBoneArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosMatrixToBoneListOffset.Value = (uint)saver.SaveOffsetPos();
             if (saver.ResFile.Version >= 0x03040000)
-                PosInverseModelMatricesOffset = saver.SaveOffsetPos();
+                PosInverseModelMatricesOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write(0); // UserPointer
         }
     }

@@ -103,9 +103,9 @@ namespace Syroot.NintenTools.Bfres
             UserData = loader.LoadDict<UserData>();
         }
 
-        internal long PosCurveArrayOffset;
-        internal long PosBaseDataOffset;
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosCurveArrayOffset = new ResSavedPos();
+        internal ResSavedPos PosBaseDataOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -118,9 +118,9 @@ namespace Syroot.NintenTools.Bfres
             saver.Write((ushort)UserData.Count);
             saver.Write(BakedSize);
             saver.SaveString(Name);
-            PosCurveArrayOffset = saver.SaveOffsetPos();
-            PosBaseDataOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosCurveArrayOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBaseDataOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
     

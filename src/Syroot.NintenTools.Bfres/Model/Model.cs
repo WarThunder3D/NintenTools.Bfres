@@ -128,22 +128,22 @@ namespace Syroot.NintenTools.Bfres
             VertexBuffers = loader.LoadList<VertexBuffer>(numVertexBuffer, ofsVertexBufferList);
         }
 
-        internal long SkeletonOffset;
-        internal long VertexBufferOffset;
-        internal long ShapeOffset;
-        internal long MaterialsOffset;
-        internal long PosUserDataOffset;
+        internal ResSavedPos SkeletonOffset = new ResSavedPos();
+        internal ResSavedPos VertexBufferOffset = new ResSavedPos();
+        internal ResSavedPos ShapeOffset = new ResSavedPos();
+        internal ResSavedPos MaterialsOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
             saver.WriteSignature(_signature);
             saver.SaveString(Name);
             saver.SaveString(Path);
-            SkeletonOffset = saver.SaveOffsetPos();
-            VertexBufferOffset = saver.SaveOffsetPos();
-            ShapeOffset = saver.SaveOffsetPos();
-            MaterialsOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            SkeletonOffset.Value = (uint)saver.SaveOffsetPos();
+            VertexBufferOffset.Value = (uint)saver.SaveOffsetPos();
+            ShapeOffset.Value = (uint)saver.SaveOffsetPos();
+            MaterialsOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write((ushort)VertexBuffers.Count);
             saver.Write((ushort)Shapes.Count);
             saver.Write((ushort)Materials.Count);

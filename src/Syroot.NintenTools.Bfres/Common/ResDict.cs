@@ -431,8 +431,7 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(sizeof(uint) * 2 + (_nodes.Count) * Node.SizeInBytes);
             saver.Write(Count);
 
-            // Write nodes.
-            int index = -1; // Start at -1 due to root node.
+            // Write nodes.            
             foreach (Node node in _nodes)
             {
                 saver.Write(node.Reference);
@@ -445,10 +444,16 @@ namespace Syroot.NintenTools.Bfres
                         saver.SaveString(resString);
                         break;
                     default:
-                        saver.Save(node.Value, index++);
+                        node.SavedPosition.Value = (uint)saver.SaveOffsetPos();// node value     
                         break;
                 }
             }
+        }
+
+        internal ResSavedPos GetSavedPos(int i)
+        {
+            // add 1 due to root node
+            return _nodes[i + 1].SavedPosition;
         }
 
         // ---- METHODS (INTERNAL) -------------------------------------------------------------------------------------
@@ -480,7 +485,7 @@ namespace Syroot.NintenTools.Bfres
         }
 
         // ---- METHODS (PROTECTED) ------------------------------------------------------------------------------------
-        
+
         /// <summary>
         /// Loads an <see cref="IResData"/> instance from the given <paramref name="loader"/>.
         /// </summary>
@@ -657,6 +662,8 @@ namespace Syroot.NintenTools.Bfres
             internal ushort IdxRight;
             internal string Key;
             internal IResData Value;
+
+            internal ResSavedPos SavedPosition = new ResSavedPos();
 
             internal Node()
             {

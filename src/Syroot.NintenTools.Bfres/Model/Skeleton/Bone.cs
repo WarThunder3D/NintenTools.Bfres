@@ -346,7 +346,7 @@ namespace Syroot.NintenTools.Bfres
             }
         }
 
-        internal long PosUserDataOffset;
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
@@ -361,7 +361,7 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(Scale);
             saver.Write(Rotation);
             saver.Write(Position);
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
 
             if (saver.ResFile.Version < 0x03040000)
             {

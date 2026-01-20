@@ -111,15 +111,12 @@ namespace Syroot.NintenTools.Bfres
             uint userPointer = loader.ReadUInt32();
         }
 
-        internal long AttributeOffset;
-        internal long AttributeDictOffset;
-        internal long BufferOffset;
-        internal long Position;
+        internal ResSavedPos AttributeOffset = new ResSavedPos();
+        internal ResSavedPos AttributeDictOffset = new ResSavedPos();
+        internal ResSavedPos BufferOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
-            Position = saver.Position;
-
             saver.WriteSignature(_signature);
             saver.Write((byte)Attributes.Count);
             saver.Write((byte)Buffers.Count);
@@ -127,9 +124,9 @@ namespace Syroot.NintenTools.Bfres
             saver.Write(VertexCount);
             saver.Write(VertexSkinCount);
             saver.Seek(3);
-            AttributeOffset = saver.SaveOffsetPos();
-            AttributeDictOffset = saver.SaveOffsetPos();
-            BufferOffset = saver.SaveOffsetPos();
+            AttributeOffset.Value = (uint)saver.SaveOffsetPos();
+            AttributeDictOffset.Value = (uint)saver.SaveOffsetPos();
+            BufferOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write(0); // UserPointer
         }
     }

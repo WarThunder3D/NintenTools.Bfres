@@ -32,6 +32,8 @@ namespace Syroot.NintenTools.Bfres
         /// </summary>
         public Texture Texture { get; set; }
 
+        internal ResSavedPos PosTextureRef = new ResSavedPos();
+
         // ---- METHODS ------------------------------------------------------------------------------------------------
 
         void IResData.Load(ResFileLoader loader)
@@ -39,11 +41,11 @@ namespace Syroot.NintenTools.Bfres
             Name = loader.LoadString();
             Texture = loader.Load<Texture>();
         }
-        
+
         void IResData.Save(ResFileSaver saver)
         {
             saver.SaveString(Name);
-            saver.Save(Texture);
+            PosTextureRef.Value = (uint)saver.SaveOffsetPos();//saver.Save(Texture);
         }
     }
 }

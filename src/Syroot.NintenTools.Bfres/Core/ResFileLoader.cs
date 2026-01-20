@@ -111,7 +111,7 @@ namespace Syroot.NintenTools.Bfres.Core
             // Load the raw data into structures recursively.
             ((IResData)ResFile).Load(this);
         }
-        
+
         /// <summary>
         /// Reads and returns an <see cref="IResData"/> instance of type <typeparamref name="T"/> from the following
         /// offset or returns <c>null</c> if the read offset is 0.
@@ -247,7 +247,7 @@ namespace Syroot.NintenTools.Bfres.Core
                 return names;
             }
         }
-        
+
         /// <summary>
         /// Reads a BFRES signature consisting of 4 ASCII characters encoded as an <see cref="UInt32"/> and checks for
         /// validity.
@@ -288,8 +288,30 @@ namespace Syroot.NintenTools.Bfres.Core
             return values;
         }
 
+        internal bool[] ReadBit32Booleans(int count)
+        {
+            bool[] booleans = new bool[count];
+            if (count == 0) return booleans;
+
+            int idx = 0;
+            while (idx < count)
+            {
+                uint value = ReadUInt32();
+                for (int i = 0; i < 32; i++)
+                {
+                    if (count <= idx) break;
+
+                    booleans[idx] = (value & 0x1) != 0;
+                    value >>= 1;
+
+                    idx++;
+                }
+            }
+            return booleans;
+        }
+
         // ---- METHODS (PRIVATE) --------------------------------------------------------------------------------------
-        
+
         [DebuggerStepThrough]
         private T ReadResData<T>()
             where T : IResData, new()

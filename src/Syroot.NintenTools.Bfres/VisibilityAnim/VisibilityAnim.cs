@@ -166,28 +166,18 @@ namespace Syroot.NintenTools.Bfres
             Curves = loader.LoadList<AnimCurve>(numCurve);
             BaseDataList = loader.LoadCustom(() =>
             {
-                bool[] baseData = new bool[numAnim];
-                int i = 0;
-                while (i < numAnim)
-                {
-                    byte b = loader.ReadByte();
-                    for (int j = 0; j < 8 && i < numAnim; j++)
-                    {
-                        baseData[i++] = b.GetBit(j);
-                    }
-                }
-                return baseData;
+                return loader.ReadBit32Booleans(numAnim);
             });
             UserData = loader.LoadDict<UserData>();
         }
 
-        internal long PosBindModelOffset;
-        internal long PosBindIndicesOffset;
-        internal long PosNamesOffset;
-        internal long PosCurvesOffset;
-        internal long PosBaseDataOffset;
-        internal long PosUserDataOffset;
-
+        internal ResSavedPos PosBindModelOffset = new ResSavedPos();
+        internal ResSavedPos PosBindIndicesOffset = new ResSavedPos();
+        internal ResSavedPos PosNamesOffset = new ResSavedPos();
+        internal ResSavedPos PosCurvesOffset = new ResSavedPos();
+        internal ResSavedPos PosBaseDataOffset = new ResSavedPos();
+        internal ResSavedPos PosUserDataOffset = new ResSavedPos();
+        
         void IResData.Save(ResFileSaver saver)
         {
             saver.WriteSignature(_signature);
@@ -212,12 +202,12 @@ namespace Syroot.NintenTools.Bfres
                 saver.Write((ushort)0);
             }
 
-            PosBindModelOffset = saver.SaveOffsetPos();
-            PosBindIndicesOffset = saver.SaveOffsetPos();
-            PosNamesOffset = saver.SaveOffsetPos();
-            PosCurvesOffset = saver.SaveOffsetPos();
-            PosBaseDataOffset = saver.SaveOffsetPos();
-            PosUserDataOffset = saver.SaveOffsetPos();
+            PosBindModelOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBindIndicesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosNamesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosCurvesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosBaseDataOffset.Value = (uint)saver.SaveOffsetPos();
+            PosUserDataOffset.Value = (uint)saver.SaveOffsetPos();
         }
     }
     

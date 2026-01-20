@@ -29,8 +29,6 @@ namespace Syroot.NintenTools.Bfres.Core
         private List<ItemEntry> _savedItems;
         private IDictionary<string, StringEntry> _savedStrings;
         private IDictionary<object, BlockEntry> _savedBlocks;
-        private SavedItemsIndices _savedIndices = new SavedItemsIndices();
-
 
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
@@ -249,16 +247,23 @@ namespace Syroot.NintenTools.Bfres.Core
             _savedItems = new List<ItemEntry>();
             _savedStrings = new SortedDictionary<string, StringEntry>(ResStringComparer.Instance);
             _savedBlocks = new Dictionary<object, BlockEntry>();
-            _savedIndices = new SavedItemsIndices();
 
             // Store the headers recursively and satisfy offsets to them, then the string pool and data blocks.
             SaveResFile();
+            SaveSubFileFMDL();
+            SaveSubFileFTEX();
+            SaveSubFileFSKA();
+            //the rest?
+            SaveSubFileFVIS(ResFile.BoneVisibilityAnims);
+            SaveSubFileFVIS(ResFile.MatVisibilityAnims);
             SaveEntries();
 
             // Satisfy offsets, strings, and data blocks.
+
             WriteOffsets();
             WriteStrings();
             WriteBlocks();
+
             // Save final file size into root header at the provided offset.
             Position = _ofsFileSize;
             Write((uint)BaseStream.Length);
@@ -267,186 +272,217 @@ namespace Syroot.NintenTools.Bfres.Core
 
         private void SaveResFile()
         {
-            Save(ResFile);
-            ((IResData)ResFile).Save(this);            
-
-            //Setup subfiles first
-            if (ResFile.Models.Count > 0)
-            {
-                WriteOffset(ResFile.ModelOffset);
-                Save(ResFile.Models);
-                ((IResData)ResFile.Models).Save(this);
-                foreach (var mdl in ResFile.Models)
-                    WriteModel(mdl.Value);
-            }
-            if (ResFile.Textures.Count > 0)
-            {
-                WriteOffset(ResFile.TextureOffset);
-                ((IResData)ResFile.Textures).Save(this);
-            }
-            if (ResFile.SkeletalAnims.Count > 0)
-            {
-                WriteOffset(ResFile.SkeletonAnimationOffset);
-                ((IResData)ResFile.SkeletalAnims).Save(this);                
-            }
-            if (ResFile.ShaderParamAnims.Count > 0)
-            {
-                WriteOffset(ResFile.ShaderParamAnimationOffset);
-                ((IResData)ResFile.ShaderParamAnims).Save(this);
-            }
-            if (ResFile.ColorAnims.Count > 0)
-            {
-                WriteOffset(ResFile.ColorParamAnimationOffset);
-                ((IResData)ResFile.ColorAnims).Save(this);
-            }
-            if (ResFile.TexSrtAnims.Count > 0)
-            {
-                WriteOffset(ResFile.TexSrtParamAnimationOffset);
-                ((IResData)ResFile.TexSrtAnims).Save(this);
-            }
-            if (ResFile.TexPatternAnims.Count > 0)
-            {
-                WriteOffset(ResFile.TexPatParamAnimationOffset);
-                ((IResData)ResFile.TexPatternAnims).Save(this);
-            }
-            if (ResFile.BoneVisibilityAnims.Count > 0)
-            {
-                WriteOffset(ResFile.BoneVisAnimationOffset);
-                ((IResData)ResFile.BoneVisibilityAnims).Save(this);
-            }
-            if (ResFile.MatVisibilityAnims.Count > 0)
-            {
-                WriteOffset(ResFile.MatVisAnimationOffset);
-                ((IResData)ResFile.MatVisibilityAnims).Save(this);
-            }
-            if (ResFile.ShapeAnims.Count > 0)
-            {
-                WriteOffset(ResFile.ShapeAnimationOffset);
-                ((IResData)ResFile.ShapeAnims).Save(this);
-            }
-            if (ResFile.SceneAnims.Count > 0)
-            {
-                WriteOffset(ResFile.SceneAnimationOffset);
-                ((IResData)ResFile.SceneAnims).Save(this);
-            }
-            if (ResFile.ExternalFiles.Count > 0)
-            {
-                WriteOffset(ResFile.ExternalFileOffset);
-                ((IResData)ResFile.ExternalFiles).Save(this);
-            }
+            Save(ResFile, null);
+            SaveDict(ResFile.Models, ResFile.ModelOffset);
+            SaveDict(ResFile.Textures, ResFile.TextureOffset);
+            SaveDict(ResFile.SkeletalAnims, ResFile.SkeletonAnimationOffset);
+            SaveDict(ResFile.ShaderParamAnims, ResFile.ShaderParamAnimationOffset);
+            SaveDict(ResFile.ColorAnims, ResFile.ColorParamAnimationOffset);
+            SaveDict(ResFile.TexSrtAnims, ResFile.TexSrtParamAnimationOffset);
+            SaveDict(ResFile.TexPatternAnims, ResFile.TexPatParamAnimationOffset);
+            SaveDict(ResFile.BoneVisibilityAnims, ResFile.BoneVisAnimationOffset);
+            SaveDict(ResFile.MatVisibilityAnims, ResFile.MatVisAnimationOffset);
+            SaveDict(ResFile.ShapeAnims, ResFile.ShapeAnimationOffset);
+            SaveDict(ResFile.SceneAnims, ResFile.SceneAnimationOffset);
+            SaveDict(ResFile.ExternalFiles, ResFile.ExternalFileOffset);
         }
 
-        private void WriteModel(Model mdl)
+        private void SaveSubFileFMDL()
         {
-            if (mdl.VertexBuffers.Count > 0)
+            for (int i = 0; i < ResFile.Models.Count; ++i)
             {
-                WriteOffset(mdl.VertexBufferOffset);
-                SaveList(mdl.VertexBuffers, true);
-            }
-            if (mdl.Skeleton != null)
-            {
-                WriteOffset(mdl.SkeletonOffset);
-                Save(mdl.Skeleton, skipBinaryWrite: true);
-                SaveList(mdl.Skeleton.Bones.Values, skipBinaryWrite: true);
-                SaveCustom(mdl.Skeleton.MatrixToBoneList, () => { this.Write(mdl.Skeleton.MatrixToBoneList); }, true);
-                SaveCustom(mdl.Skeleton.InverseModelMatrices, () => { this.Write(mdl.Skeleton.InverseModelMatrices); }, true);
-                SaveDict(mdl.Skeleton.Bones, true);
-            }
+                Model mdl = ResFile.Models[i];
 
-            if (mdl.Shapes.Count > 0)
-            {
-                WriteOffset(mdl.ShapeOffset);
-                Save(mdl.Shapes, skipBinaryWrite: true);
-            }
+                Save(mdl, ResFile.Models.GetSavedPos(i), i); // FMDL
+                SaveList(mdl.VertexBuffers, mdl.VertexBufferOffset, mdl.Shapes, PosDictSaveType.SaveVertexBufferList); //FVTX
 
-            if (mdl.Materials.Count > 0)
-            {
-                WriteOffset(mdl.MaterialsOffset);
-                Save(mdl.Materials, skipBinaryWrite: true);
-            }
+                Save(mdl.Skeleton, mdl.SkeletonOffset);//FSKL
+                SaveList(mdl.Skeleton.Bones.Values, mdl.Skeleton.PosBoneArrayOffset, mdl.Skeleton.Bones);
+                SaveCustom(mdl.Skeleton.MatrixToBoneList, () => { this.Write(mdl.Skeleton.MatrixToBoneList); }, mdl.Skeleton.PosMatrixToBoneListOffset);
+                SaveCustom(mdl.Skeleton.InverseModelMatrices, () => { this.Write(mdl.Skeleton.InverseModelMatrices); }, mdl.Skeleton.PosInverseModelMatricesOffset);
+                SaveDict(mdl.Skeleton.Bones, mdl.Skeleton.PosBoneDictOffset);
 
-            int index = 0;
-            foreach (var shp in mdl.Shapes)
-            {
-                Save(shp.Value, index, skipBinaryWrite: true);
+                SaveDict(mdl.Shapes, mdl.ShapeOffset);
+                //SaveList(mdl.Shapes.Values, null);
 
-                //WriteOffset(shp.Value.mes); // vertex?
-                //WriteOffset(shp.Value.mes);
-                SaveList(shp.Value.Meshes, true); // LoD
-                SaveCustom(shp.Value.SkinBoneIndices, () => { this.Write(shp.Value.SkinBoneIndices); }, true);
-                foreach (var k in shp.Value.KeyShapes)
+                SaveDict(mdl.Materials, mdl.MaterialsOffset);
+                //SaveList(mdl.Materials.Values, null);
+
+                for (int j = 0; j < mdl.Shapes.Count; ++j)
                 {
-                    Save(k.Value, skipBinaryWrite: true);
-                }
-                SaveList(shp.Value.SubMeshBoundingNodes, true);
-                SaveCustom(shp.Value.SubMeshBoundings, () =>
-                {
-                    foreach (var k in shp.Value.SubMeshBoundings)
+                    Shape shp = mdl.Shapes[j]; // FSHP
+
+                    Save(shp, mdl.Shapes.GetSavedPos(j), j);
+
+                    SaveList(shp.Meshes, shp.PosMeshArrayOffset); // LoD
+                    SaveCustom(shp.SkinBoneIndices, () => { this.Write(shp.SkinBoneIndices); }, shp.PosSkinBoneIndicesOffset);
+                    SaveList(shp.KeyShapes.Values, shp.PosKeyShapesOffset);
+                    SaveList(shp.SubMeshBoundingNodes, shp.PosSubMeshBoundingNodesOffset);
+                    SaveCustom(shp.SubMeshBoundings, () =>
                     {
-                        this.Write(k);
+                        foreach (var k in shp.SubMeshBoundings)
+                        {
+                            this.Write(k);
+                        }
+                    }, shp.PosSubMeshBoundingsOffset);
+                    SaveCustom(shp.SubMeshBoundingIndices, () => { this.Write(shp.SubMeshBoundingIndices); }, shp.PosSubMeshBoundingsIndicesOffset);
+
+                    foreach (var k in shp.Meshes) //LoD
+                    {
+                        SaveList(k.SubMeshes, k.PosSubMeshesOffset); //Visibility Group offset
+                        Save(k.IndexBuffer, k.PosBufferOffset);
                     }
-                }, true);
-                SaveCustom(shp.Value.SubMeshBoundingIndices, () => { this.Write(shp.Value.SubMeshBoundingIndices); }, true);
-
-                foreach (var k in shp.Value.Meshes) //LoD
-                {
-                    SaveList(k.SubMeshes, true); //Visibility Group offset
-                    Save(k.IndexBuffer, skipBinaryWrite: true);
                 }
 
-                ++index;
-            }
-
-            // vertex buffers
-            foreach (var vtxbuf in mdl.VertexBuffers)
-            {
-                //Save(vtxbuf.Attributes, skipBinaryWrite: true);
-                foreach (var a in vtxbuf.Attributes)
+                // vertex buffers
+                foreach (var vtxbuf in mdl.VertexBuffers)
                 {
-                    Save(a.Value, skipBinaryWrite: true);
-                }
-                SaveList(vtxbuf.Buffers, skipBinaryWrite: true);
-                SaveDict(vtxbuf.Attributes, skipBinaryWrite: true);
-            }
-
-            // FMAT            
-            foreach (var mat in mdl.Materials)
-            {
-                Save(mat.Value, skipBinaryWrite: true);
-
-                foreach (var rendInfo in mat.Value.RenderInfos)
-                {
-                    Save(rendInfo.Value, skipBinaryWrite: true);
+                    SaveList(vtxbuf.Attributes.Values, vtxbuf.AttributeOffset, vtxbuf.Attributes);
+                    SaveList(vtxbuf.Buffers, vtxbuf.BufferOffset);
+                    SaveDict(vtxbuf.Attributes, vtxbuf.AttributeDictOffset);
                 }
 
-                Save(mat.Value.RenderState, skipBinaryWrite: true);
+                // FMAT           
+                for (int j = 0; j < mdl.Materials.Count; ++j)
+                {
+                    Material mat = mdl.Materials[j];
 
-                SaveList(mat.Value.TextureRefs, skipBinaryWrite: true);
-                SaveList(mat.Value.Samplers.Values, skipBinaryWrite: true);
-                SaveList(mat.Value.ShaderParams.Values, skipBinaryWrite: true);
-                SaveCustom(mat.Value.ShaderParamData, () => { this.Write(mat.Value.ShaderParamData); }, skipBinaryWrite: true);
-                SaveCustom(mat.Value.VolatileFlags, () => { this.Write(mat.Value.VolatileFlags); }, skipBinaryWrite: true);
-                Save(mat.Value.ShaderAssign, skipBinaryWrite: true);
-                SaveDict(mat.Value.ShaderAssign.AttribAssigns, skipBinaryWrite: true);
-                SaveDict(mat.Value.ShaderAssign.SamplerAssigns, skipBinaryWrite: true);
-                SaveDict(mat.Value.ShaderAssign.ShaderOptions, skipBinaryWrite: true);
-                SaveDict(mat.Value.RenderInfos, skipBinaryWrite: true);
-                SaveDict(mat.Value.Samplers, skipBinaryWrite: true);
-                SaveDict(mat.Value.ShaderParams, skipBinaryWrite: true);
-                SaveDict(mat.Value.UserData, skipBinaryWrite: true);
-                SaveList(mat.Value.UserData.Values, skipBinaryWrite: true);
+                    Save(mat, mdl.Materials.GetSavedPos(j), j);
+
+                    SaveList(mat.RenderInfos.Values, null, mat.RenderInfos); // ??
+
+                    Save(mat.RenderState, mat.PosRenderStateOffset);
+
+                    SaveList(mat.TextureRefs, mat.PosTextureRefsOffset);
+                    SaveList(mat.Samplers.Values, mat.PosSamplersOffset, mat.Samplers);
+                    SaveList(mat.ShaderParams.Values, mat.PosShaderParamsOffset, mat.ShaderParams);
+                    SaveCustom(mat.ShaderParamData, () => { this.Write(mat.ShaderParamData); }, mat.PosShaderParamDataOffset);
+                    SaveCustom(mat.VolatileFlags, () => { this.Write(mat.VolatileFlags); }, mat.PosVolatileFlagsOffset);
+                    Save(mat.ShaderAssign, mat.PosShaderAssignOffset);
+                    SaveDict(mat.ShaderAssign.AttribAssigns, mat.ShaderAssign.PosAttribAssigns);
+                    SaveDict(mat.ShaderAssign.SamplerAssigns, mat.ShaderAssign.PosSamplerAssigns);
+                    SaveDict(mat.ShaderAssign.ShaderOptions, mat.ShaderAssign.PosShaderOptions);
+                    SaveDict(mat.RenderInfos, mat.PosRenderInfoOffset);
+                    SaveDict(mat.Samplers, mat.PosSamplerDictOffset);
+                    SaveDict(mat.ShaderParams, mat.PosShaderParamDictOffset);
+                    SaveDict(mat.UserData, mat.PosUserDataMaterialOffset);
+                    SaveList(mat.UserData.Values, null, mat.UserData);
+                }
             }
-
-
         }
 
-        private void WriteSkeletalAnim(SkeletalAnim skl, int index)
+        private void SaveSubFileFTEX()
         {
-            Save(skl, index, skipBinaryWrite: true);
+            for (int i = 0; i < ResFile.Textures.Count; ++i)
+            {
+                Texture tex = ResFile.Textures[i];
 
-            SaveCustom(skl.BindIndices, () => { this.Write(skl.BindIndices); }, skipBinaryWrite: true);
-            //skeleton?
-            SaveList(skl.BoneAnims, skipBinaryWrite: true);
+                Save(tex, ResFile.Textures.GetSavedPos(i), i);
+                SaveTextureReferencePositions(tex, _savedItems.Last()); // NOTE: taking last item for offsets
+
+
+            }
+        }
+
+
+        // resolve texture references (FMDL for now)
+        private void SaveTextureReferencePositions(Texture tex, ItemEntry item)
+        {
+            foreach (var mdl in ResFile.Models)
+            {
+                foreach (var mat in mdl.Value.Materials)
+                {
+                    for (int j = 0; j < mat.Value.TextureRefs.Count; ++j)
+                    {
+                        if (ReferenceEquals(mat.Value.TextureRefs[j].Texture, tex))
+                        {
+                            item.Offsets.Add(mat.Value.TextureRefs[j].PosTextureRef);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void SaveSubFileFSKA()
+        {
+            for (int i = 0; i < ResFile.SkeletalAnims.Count; ++i)
+            {
+                SkeletalAnim ska = ResFile.SkeletalAnims[i];
+
+                Save(ska, ResFile.SkeletalAnims.GetSavedPos(i), i);
+
+                SaveCustom(ska.BindIndices, () => { this.Write(ska.BindIndices); }, ska.PosBindIndicesOffset);
+
+                SaveList(ska.BoneAnims, ska.PosBoneAnimsOffset);
+
+                for (int j = 0; j < ska.BoneAnims.Count; ++j)
+                {
+                    BoneAnim boneanim = ska.BoneAnims[j];
+
+                    SaveCustom(boneanim.BaseData, () => { boneanim.BaseData.Save(this, boneanim.FlagsBase); }, boneanim.PosBaseDataListOffset, true);
+                    SaveList(boneanim.Curves, boneanim.PosCurvesOffset, forceAdd: true);
+
+                    for (int k = 0; k < boneanim.Curves.Count; ++k)
+                    {
+                        AnimCurve curve = boneanim.Curves[k];
+
+                        SaveCustom(curve.Frames, () => { curve.SaveFrames(this); }, curve.PosFramesOffset);
+                        SaveCustom(curve.Keys, () => { curve.SaveKeyData(this); }, curve.PosKeysOffset);
+                    }
+                }
+
+                SaveDict(ska.UserData, ska.PosUserDataOffset);
+                SaveList(ska.UserData.Values, null, ska.UserData);
+
+            }
+        }
+
+        // bone visibility
+        private void SaveSubFileFVIS(ResDict<VisibilityAnim> visdict)
+        {
+            for (int i = 0; i < visdict.Count; ++i)
+            {
+                VisibilityAnim visanim = visdict[i];
+                Save(visanim, visdict.GetSavedPos(i), i);
+
+                SaveCustom(visanim.BindIndices, () => { this.Write(visanim.BindIndices); }, visanim.PosBindIndicesOffset);
+
+                SaveCustom(visanim.Names, () => { SaveStrings(visanim.Names); }, visanim.PosNamesOffset);
+
+                SaveList(visanim.Curves, visanim.PosCurvesOffset, forceAdd: true); // force write offset
+                SaveCustom(visanim.BaseDataList, () => { WriteBit32Booleans(visanim.BaseDataList); }, visanim.PosBaseDataOffset);
+
+                for (int j = 0; j < visanim.Curves.Count; ++j)
+                {
+                    AnimCurve curve = visanim.Curves[j];
+
+                    SaveCustom(curve.Frames, () => { curve.SaveFrames(this); }, curve.PosFramesOffset);
+                    SaveCustom(curve.Keys, () => { curve.SaveKeyData(this); }, curve.PosKeysOffset);
+                }
+
+
+            }
+        }
+
+        internal void WriteBit32Booleans(bool[] booleans)
+        {
+            if (booleans.Length == 0) return;
+
+            int idx = 0;
+            while (idx < booleans.Length)
+            {
+                uint value = 0;
+                for (int i = 0; i < 32; i++)
+                {
+                    if (booleans.Length <= idx) break;
+
+                    if (booleans[idx])
+                        value |= (uint)(1 << i);
+
+                    idx++;
+                }
+                Write(value);
+            }
         }
 
         private void SaveEntries()
@@ -528,25 +564,25 @@ namespace Syroot.NintenTools.Bfres.Core
         /// <param name="index">The index of the element, used for instances referenced by a <see cref="ResDict"/>.
         /// </param>
         [DebuggerStepThrough]
-        internal void Save(IResData resData, int index = -1, bool skipBinaryWrite = false)
+        internal void Save(IResData resData, ResSavedPos pos_value, int index = -1)
         {
             if (resData == null)
             {
-                if (!skipBinaryWrite)
-                    Write(0);
+                //Write(0);
                 return;
             }
+
             if (TryGetItemEntry(resData, ItemEntryType.ResData, out ItemEntry entry))
             {
-                entry.Offsets.Add((uint)Position);
+                if (pos_value != null)
+                    entry.Offsets.Add((ResSavedPos)pos_value);
                 entry.Index = index;
             }
             else
             {
-                _savedItems.Add(new ItemEntry(resData, ItemEntryType.ResData, (uint)Position, index: index));
+                _savedItems.Add(new ItemEntry(resData, ItemEntryType.ResData, pos_value, index: index));
             }
-            if (!skipBinaryWrite)
-                Write(UInt32.MaxValue);
+            //Write(UInt32.MaxValue);
         }
 
         /// <summary>
@@ -570,26 +606,50 @@ namespace Syroot.NintenTools.Bfres.Core
             Write(0L);
         }
 
+        private ResSavedPos SaveVertexBuffer(IResData buffer, ResDict<Shape> s)
+        {
+            foreach (var shape in s)
+            {
+                if (ReferenceEquals(buffer, shape.Value.VertexBuffer))
+                    return shape.Value.PosVertexBufferOffset;
+            }
+            return null;
+        }
+
+        internal enum PosDictSaveType
+        {
+            Default,
+            SaveVertexBufferList
+        }
+
         /// <summary>
         /// Reserves space for an offset to the <paramref name="list"/> written later.
         /// </summary>
         /// <typeparam name="T">The type of the <see cref="IResData"/> elements.</typeparam>
         /// <param name="list">The <see cref="IList{T}"/> to save.</param>
-        [DebuggerStepThrough]
-        internal void SaveList<T>(IEnumerable<T> list, bool skipBinaryWrite = false)
+        /// <param name="pos_value"></param>
+        /// <param name="pos_dict"> If not null, will write positions of nodes to the provided Index Group ResDict.</param>
+        //[DebuggerStepThrough]
+        internal void SaveList<T>(IEnumerable<T> list, ResSavedPos pos_value, ResDict pos_dict = null, PosDictSaveType posdicttype = PosDictSaveType.Default, bool forceAdd = false)
             where T : IResData, new()
         {
 
             if (list?.Count() == 0)
             {
-                if (!skipBinaryWrite)
-                    Write(0);
+                if (forceAdd && list != null)
+                {
+                    if (pos_value != null)
+                        _savedItems.Add(new ItemEntry(list, ItemEntryType.Custom, pos_value, callback: () => { }));
+                }
+                //Write(0);
                 return;
             }
+
             // The offset to the list is the offset to the first element.
             if (TryGetItemEntry(list.First(), ItemEntryType.ResData, out ItemEntry entry))
             {
-                entry.Offsets.Add((uint)Position);
+                if (pos_value != null)
+                    entry.Offsets.Add((ResSavedPos)pos_value);
                 entry.Index = 0;
             }
             else
@@ -598,21 +658,42 @@ namespace Syroot.NintenTools.Bfres.Core
                 int index = 0;
                 foreach (T element in list)
                 {
+                    ItemEntry newitem;
+
+                    newitem = new ItemEntry(element, ItemEntryType.ResData, index: index);
+
                     if (index == 0)
                     {
                         // Add with offset to the first item for the list.
-                        _savedItems.Add(new ItemEntry(element, ItemEntryType.ResData, (uint)Position, index: index));
+                        if (pos_value != null)
+                            newitem.Offsets.Add(pos_value);
                     }
-                    else
+
+                    if (pos_dict != null)
                     {
-                        // Add without offsets existing yet.
-                        _savedItems.Add(new ItemEntry(element, ItemEntryType.ResData, index: index));
+                        ResSavedPos pos_get;
+
+                        switch (posdicttype)
+                        {
+                            case PosDictSaveType.SaveVertexBufferList:
+                                pos_get = SaveVertexBuffer(element, (ResDict<Shape>)pos_dict);
+                                break;
+                            default:
+                                pos_get = pos_dict.GetSavedPos(index);
+                                break;
+                        }
+
+                        if (pos_get != null)
+                            newitem.Offsets.Add(pos_get);
+
                     }
+
+                    _savedItems.Add(newitem);
+
                     index++;
                 }
             }
-            if (!skipBinaryWrite)
-                Write(UInt32.MaxValue);
+            //Write(UInt32.MaxValue);
         }
 
         /// <summary>
@@ -621,25 +702,24 @@ namespace Syroot.NintenTools.Bfres.Core
         /// <typeparam name="T">The type of the <see cref="IResData"/> element values.</typeparam>
         /// <param name="dict">The <see cref="ResDict{T}"/> to save.</param>
         [DebuggerStepThrough]
-        internal void SaveDict<T>(ResDict<T> dict, bool skipBinaryWrite = false)
+        internal void SaveDict<T>(ResDict<T> dict, ResSavedPos pos_value)
             where T : IResData, new()
         {
             if (dict?.Count == 0)
             {
-                if (!skipBinaryWrite)
-                    Write(0);
+                //Write(0);
                 return;
             }
             if (TryGetItemEntry(dict, ItemEntryType.Dict, out ItemEntry entry))
             {
-                entry.Offsets.Add((uint)Position);
+                if (pos_value != null)
+                    entry.Offsets.Add((ResSavedPos)pos_value);
             }
             else
             {
-                _savedItems.Add(new ItemEntry(dict, ItemEntryType.Dict, (uint)Position));
+                _savedItems.Add(new ItemEntry(dict, ItemEntryType.Dict, pos_value));
             }
-            if (!skipBinaryWrite)
-                Write(UInt32.MaxValue);
+            //Write(UInt32.MaxValue);
         }
 
         /// <summary>
@@ -649,24 +729,27 @@ namespace Syroot.NintenTools.Bfres.Core
         /// <param name="data">The data to save.</param>
         /// <param name="callback">The <see cref="Action"/> to invoke to write the data.</param>
         [DebuggerStepThrough]
-        internal void SaveCustom(object data, Action callback, bool skipBinaryWrite = false)
+        internal void SaveCustom(object data, Action callback, ResSavedPos pos_value, bool forceAdd = false)
         {
-            if (data == null)
+            if (!forceAdd && data == null)
             {
-                if (!skipBinaryWrite)
-                    Write(0);
+                //Write(0);
                 return;
             }
-            if (TryGetItemEntry(data, ItemEntryType.Custom, out ItemEntry entry))
+
+            // value types have the risk of not being written due to identical data, e.g. BoneAnimData 
+            //forceAdd = !(data is IResData);
+
+            if (!forceAdd && TryGetItemEntry(data, ItemEntryType.Custom, out ItemEntry entry))
             {
-                entry.Offsets.Add((uint)Position);
+                if (pos_value != null)
+                    entry.Offsets.Add((ResSavedPos)pos_value);
             }
             else
             {
-                _savedItems.Add(new ItemEntry(data, ItemEntryType.Custom, (uint)Position, callback: callback));
+                _savedItems.Add(new ItemEntry(data, ItemEntryType.Custom, pos_value, callback: callback));
             }
-            if (!skipBinaryWrite)
-                Write(UInt32.MaxValue);
+            //Write(UInt32.MaxValue);
         }
 
         /// <summary>
@@ -747,16 +830,25 @@ namespace Syroot.NintenTools.Bfres.Core
 
         private bool TryGetItemEntry(object data, ItemEntryType type, out ItemEntry entry)
         {
+            //entry = _savedItems.Find(x => x.Data.Equals(data) && x.Type == type);
+            //return entry != null;                
+
             foreach (ItemEntry savedItem in _savedItems)
             {
+                if (savedItem.Data == null)
+                    continue;
+
                 if (savedItem.Data.Equals(data) && savedItem.Type == type)
                 {
                     entry = savedItem;
                     return true;
                 }
             }
+
+
             entry = null;
             return false;
+
         }
 
         private void WriteStrings()
@@ -821,7 +913,7 @@ namespace Syroot.NintenTools.Bfres.Core
                 foreach (ItemEntry entry in _savedItems)
                 {
                     if (entry.Target != null)
-                        SatisfyOffsets(entry.Offsets, entry.Target.Value);
+                        SatisfyOffsets(entry.Offsets.ConvertAll(x => x.Value), entry.Target.Value);
                 }
             }
         }
@@ -842,20 +934,20 @@ namespace Syroot.NintenTools.Bfres.Core
         {
             internal object Data;
             internal ItemEntryType Type;
-            internal List<uint> Offsets;
+            internal List<ResSavedPos> Offsets;
             internal uint? Target;
             internal Action Callback;
             internal int Index;
 
-            internal ItemEntry(object data, ItemEntryType type, uint? offset = null, uint? target = null,
+            internal ItemEntry(object data, ItemEntryType type, ResSavedPos offset = null, uint? target = null,
                 Action callback = null, int index = -1)
             {
                 Data = data;
                 Type = type;
-                Offsets = new List<uint>();
-                if (offset.HasValue) // Might be null for enumerable entries to resolve references to them later.
+                Offsets = new List<ResSavedPos>();
+                if (offset != null) // Might be null for enumerable entries to resolve references to them later.
                 {
-                    Offsets.Add(offset.Value);
+                    Offsets.Add((ResSavedPos)offset);
                 }
                 Callback = callback;
                 Target = target;
@@ -891,17 +983,6 @@ namespace Syroot.NintenTools.Bfres.Core
                 Offsets = new List<uint> { offset };
                 Alignment = alignment;
                 Callback = callback;
-            }
-        }
-
-        private class SavedItemsIndices
-        {
-            private Dictionary<Type, int> d = new Dictionary<Type, int>();
-            public int shiftamount = 0;
-
-            public void Add(Type type, int count)
-            {
-                d.Add(type, count);
             }
         }
     }

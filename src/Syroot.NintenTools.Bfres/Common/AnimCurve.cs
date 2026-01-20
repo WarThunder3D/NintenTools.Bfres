@@ -1,4 +1,5 @@
 ﻿using Syroot.NintenTools.Bfres.Core;
+using System.Collections.Generic;
 
 namespace Syroot.NintenTools.Bfres
 {
@@ -276,8 +277,13 @@ namespace Syroot.NintenTools.Bfres
             }
         }
 
+        internal ResSavedPos PosFramesOffset = new ResSavedPos();
+        internal ResSavedPos PosKeysOffset = new ResSavedPos();
+
         void IResData.Save(ResFileSaver saver)
         {
+            UpdateBooleanKeys();
+
             saver.Write(_flags);
             saver.Write((ushort)Frames.Length);
             saver.Write(AnimDataOffset);
@@ -289,60 +295,114 @@ namespace Syroot.NintenTools.Bfres
             {
                 saver.Write(Delta);
             }
-            saver.SaveCustom(Frames, () =>
+            PosFramesOffset.Value = (uint)saver.SaveOffsetPos();
+            PosKeysOffset.Value = (uint)saver.SaveOffsetPos();
+        }
+
+        private void UpdateBooleanKeys()
+        {
+            if (CurveType != AnimCurveType.StepBool)
+                return;
+
+            int bitPosition = 0;
+            var keyData = KeyStepBoolData;
+            //32 boolean bits per key
+            List<uint> keys = new List<uint>() { 0 };
+
+            for (int i = 0; i < keyData.Length; i++)
             {
-                switch (FrameType)
+                //Set bit for keyed data
+                if (keyData[i])
+                    keys[keys.Count - 1] |= (uint)(1 << bitPosition);
+
+                bitPosition++;
+                //Reset position and add a new key after 32 bits
+                //Make sure to skip adding a new key if this is the last boolean key
+                if (bitPosition > 32 && keyData.Length - 1 != i)
                 {
-                    case AnimCurveFrameType.Single:
-                        if (CurveType == AnimCurveType.StepInt)
-                        {
-                            foreach (float frame in Frames)
-                                saver.Write((uint)frame);
-                        }
-                        else
-                            saver.Write(Frames);
-                        break;
-                    case AnimCurveFrameType.Decimal10x5:
-                        foreach (float frame in Frames)
-                        {
-                            saver.Write((Decimal10x5)frame);
-                        }
-                        break;
-                    case AnimCurveFrameType.Byte:
-                        foreach (float frame in Frames)
-                        {
-                            saver.Write((byte)frame);
-                        }
-                        break;
+                    keys.Add(0);
+                    bitPosition = 0;
                 }
-            });
-            saver.SaveCustom(Keys, () =>
+            }
+            //Apply the key data
+            this.Keys = new float[keys.Count, 1];
+            for (int i = 0; i < keys.Count; i++)
+                this.Keys[i, 0] = keys[i];
+        }
+
+        public void SaveFrames(ResFileSaver saver)
+        {
+            switch (FrameType)
             {
-                switch (KeyType)
-                {
-                    case AnimCurveKeyType.Single:
-                        foreach (float key in Keys)
-                        {
-                            if (CurveType == AnimCurveType.StepInt)
+                case AnimCurveFrameType.Single:
+                    if (CurveType == AnimCurveType.StepInt)
+                    {
+                        foreach (float frame in Frames)
+                            saver.Write((uint)frame);
+                    }
+                    else
+                        saver.Write(Frames);
+                    break;
+                case AnimCurveFrameType.Decimal10x5:
+                    foreach (float frame in Frames)
+                    {
+                        saver.Write((Decimal10x5)frame);
+                    }
+                    break;
+                case AnimCurveFrameType.Byte:
+                    foreach (float frame in Frames)
+                    {
+                        saver.Write((byte)frame);
+                    }
+                    break;
+            }
+        }
+
+        public void SaveKeyData(ResFileSaver saver)
+        {
+            switch (KeyType)
+            {
+                case AnimCurveKeyType.Single:
+                    switch (CurveType)
+                    {
+                        case AnimCurveType.StepInt:
+                            foreach (float key in Keys)
+                            {
                                 saver.Write((uint)key);
-                            else
+                            }
+                            break;
+                        case AnimCurveType.StepBool:
+                            int i;
+                            for (i = 0; i < Keys.GetLength(0); ++i)
+                            {
+                                saver.Write((uint)Keys[i, 0]);
+                            }
+                            for (; i < KeyStepBoolData.Length; ++i)
+                            {
+                                saver.Write(0);
+                            }
+                            break;
+                        default:
+                            foreach (float key in Keys)
+                            {
                                 saver.Write(key);
-                        }
-                        break;
-                    case AnimCurveKeyType.Int16:
-                        foreach (float key in Keys)
-                        {
-                            saver.Write((short)key);
-                        }
-                        break;
-                    case AnimCurveKeyType.SByte:
-                        foreach (float key in Keys)
-                        {
-                            saver.Write((sbyte)key);
-                        }
-                        break;
-                }
-            });
+                            }
+                            break;
+                    }
+                    break;
+                case AnimCurveKeyType.Int16:
+                    foreach (float key in Keys)
+                    {
+                        saver.Write((short)key);
+                    }
+                    break;
+                case AnimCurveKeyType.SByte:
+                    foreach (float key in Keys)
+                    {
+                        saver.Write((sbyte)key);
+                    }
+                    break;
+            }
         }
     }
 

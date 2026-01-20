@@ -316,23 +316,23 @@ namespace Syroot.NintenTools.Bfres
 
         }
 
-        internal long ModelOffset = 0;
-        internal long TextureOffset = 0;
-        internal long SkeletonAnimationOffset = 0;
-        internal long ShaderParamAnimationOffset = 0;
-        internal long ColorParamAnimationOffset = 0;
-        internal long TexSrtParamAnimationOffset = 0;
-        internal long TexPatParamAnimationOffset = 0;
-        internal long BoneVisAnimationOffset = 0;
-        internal long MatVisAnimationOffset = 0;
-        internal long ShapeAnimationOffset = 0;
-        internal long SceneAnimationOffset = 0;
-        internal long ExternalFileOffset = 0;
+        internal ResSavedPos ModelOffset = new ResSavedPos();
+        internal ResSavedPos TextureOffset = new ResSavedPos();
+        internal ResSavedPos SkeletonAnimationOffset = new ResSavedPos();
+        internal ResSavedPos ShaderParamAnimationOffset = new ResSavedPos();
+        internal ResSavedPos ColorParamAnimationOffset = new ResSavedPos();
+        internal ResSavedPos TexSrtParamAnimationOffset = new ResSavedPos();
+        internal ResSavedPos TexPatParamAnimationOffset = new ResSavedPos();
+        internal ResSavedPos BoneVisAnimationOffset = new ResSavedPos();
+        internal ResSavedPos MatVisAnimationOffset = new ResSavedPos();
+        internal ResSavedPos ShapeAnimationOffset = new ResSavedPos();
+        internal ResSavedPos SceneAnimationOffset = new ResSavedPos();
+        internal ResSavedPos ExternalFileOffset = new ResSavedPos();
 
         void IResData.Save(ResFileSaver saver)
         {
-            PreSave(); 
-            
+            PreSave();
+
             saver.WriteSignature(_signature);
             saver.Write(SaveVersion());
             saver.Write(ByteOrder.BigEndian, true);
@@ -342,18 +342,18 @@ namespace Syroot.NintenTools.Bfres
             saver.SaveString(Name);
             saver.SaveFieldStringPool();
 
-            ModelOffset = saver.SaveOffsetPos();
-            TextureOffset = saver.SaveOffsetPos();
-            SkeletonAnimationOffset = saver.SaveOffsetPos();
-            ShaderParamAnimationOffset = saver.SaveOffsetPos();
-            ColorParamAnimationOffset = saver.SaveOffsetPos();
-            TexSrtParamAnimationOffset = saver.SaveOffsetPos();
-            TexPatParamAnimationOffset = saver.SaveOffsetPos();
-            BoneVisAnimationOffset = saver.SaveOffsetPos();
-            MatVisAnimationOffset = saver.SaveOffsetPos();
-            ShapeAnimationOffset = saver.SaveOffsetPos();
-            SceneAnimationOffset = saver.SaveOffsetPos();
-            ExternalFileOffset = saver.SaveOffsetPos();
+            ModelOffset.Value = (uint)saver.SaveOffsetPos();
+            TextureOffset.Value = (uint)saver.SaveOffsetPos();
+            SkeletonAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            ShaderParamAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            ColorParamAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            TexSrtParamAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            TexPatParamAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            BoneVisAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            MatVisAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            ShapeAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            SceneAnimationOffset.Value = (uint)saver.SaveOffsetPos();
+            ExternalFileOffset.Value = (uint)saver.SaveOffsetPos();
             saver.Write((ushort)Models.Count);
             saver.Write((ushort)Textures.Count);
             saver.Write((ushort)SkeletalAnims.Count);
@@ -370,7 +370,7 @@ namespace Syroot.NintenTools.Bfres
         }
 
         // ---- METHODS (PRIVATE) --------------------------------------------------------------------------------------
-        
+
         private void PreSave()
         {
             // Update Shape instances.
