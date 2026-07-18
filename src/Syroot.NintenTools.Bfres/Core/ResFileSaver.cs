@@ -156,7 +156,7 @@ namespace Syroot.NintenTools.Bfres.Core
             else if (ExportableData is Skeleton)
             {
                 WriteHeader("fresSUB", "FSKL\0\0\0\0");
-                ((IResData)ExportableData).Save(this);
+                SaveSubFileFSKL((Skeleton)ExportableData, null);
             }
             else if (ExportableData is Bone)
             {
@@ -196,7 +196,7 @@ namespace Syroot.NintenTools.Bfres.Core
             else if (ExportableData is SkeletalAnim)
             {
                 WriteHeader("fresSUB", "FSKA\0\0\0\0");
-                ((IResData)ExportableData).Save(this);
+                SaveSubFileFSKA((SkeletalAnim)ExportableData, null);
             }
             else if (ExportableData is TexPatternAnim)
             {
@@ -252,7 +252,7 @@ namespace Syroot.NintenTools.Bfres.Core
             SaveResFile();
             SaveSubFileFMDL();
             SaveSubFileFTEX();
-            SaveSubFileFSKA();
+            SaveSubFilesFSKA();
             //the rest?
             SaveSubFileFVIS(ResFile.BoneVisibilityAnims);
             SaveSubFileFVIS(ResFile.MatVisibilityAnims);
@@ -296,11 +296,7 @@ namespace Syroot.NintenTools.Bfres.Core
                 Save(mdl, ResFile.Models.GetSavedPos(i), i); // FMDL
                 SaveList(mdl.VertexBuffers, mdl.VertexBufferOffset, mdl.Shapes, PosDictSaveType.SaveVertexBufferList); //FVTX
 
-                Save(mdl.Skeleton, mdl.SkeletonOffset);//FSKL
-                SaveList(mdl.Skeleton.Bones.Values, mdl.Skeleton.PosBoneArrayOffset, mdl.Skeleton.Bones);
-                SaveCustom(mdl.Skeleton.MatrixToBoneList, () => { this.Write(mdl.Skeleton.MatrixToBoneList); }, mdl.Skeleton.PosMatrixToBoneListOffset);
-                SaveCustom(mdl.Skeleton.InverseModelMatrices, () => { this.Write(mdl.Skeleton.InverseModelMatrices); }, mdl.Skeleton.PosInverseModelMatricesOffset);
-                SaveDict(mdl.Skeleton.Bones, mdl.Skeleton.PosBoneDictOffset);
+                SaveSubFileFSKL(mdl.Skeleton, mdl.SkeletonOffset);//FSKL
 
                 SaveDict(mdl.Shapes, mdl.ShapeOffset);
                 //SaveList(mdl.Shapes.Values, null);
@@ -371,6 +367,15 @@ namespace Syroot.NintenTools.Bfres.Core
             }
         }
 
+        private void SaveSubFileFSKL(Skeleton skeleton, ResSavedPos saved_pos)
+        {
+            Save(skeleton, saved_pos);
+            SaveList(skeleton.Bones.Values, skeleton.PosBoneArrayOffset, skeleton.Bones);
+            SaveCustom(skeleton.MatrixToBoneList, () => { this.Write(skeleton.MatrixToBoneList); }, skeleton.PosMatrixToBoneListOffset);
+            SaveCustom(skeleton.InverseModelMatrices, () => { this.Write(skeleton.InverseModelMatrices); }, skeleton.PosInverseModelMatricesOffset);
+            SaveDict(skeleton.Bones, skeleton.PosBoneDictOffset);
+        }
+
         private void SaveSubFileFTEX()
         {
             for (int i = 0; i < ResFile.Textures.Count; ++i)
@@ -403,38 +408,41 @@ namespace Syroot.NintenTools.Bfres.Core
             }
         }
 
-        private void SaveSubFileFSKA()
+        private void SaveSubFilesFSKA()
         {
             for (int i = 0; i < ResFile.SkeletalAnims.Count; ++i)
             {
                 SkeletalAnim ska = ResFile.SkeletalAnims[i];
-
-                Save(ska, ResFile.SkeletalAnims.GetSavedPos(i), i);
-
-                SaveCustom(ska.BindIndices, () => { this.Write(ska.BindIndices); }, ska.PosBindIndicesOffset);
-
-                SaveList(ska.BoneAnims, ska.PosBoneAnimsOffset);
-
-                for (int j = 0; j < ska.BoneAnims.Count; ++j)
-                {
-                    BoneAnim boneanim = ska.BoneAnims[j];
-
-                    SaveCustom(boneanim.BaseData, () => { boneanim.BaseData.Save(this, boneanim.FlagsBase); }, boneanim.PosBaseDataListOffset, true);
-                    SaveList(boneanim.Curves, boneanim.PosCurvesOffset, forceAdd: true);
-
-                    for (int k = 0; k < boneanim.Curves.Count; ++k)
-                    {
-                        AnimCurve curve = boneanim.Curves[k];
-
-                        SaveCustom(curve.Frames, () => { curve.SaveFrames(this); }, curve.PosFramesOffset);
-                        SaveCustom(curve.Keys, () => { curve.SaveKeyData(this); }, curve.PosKeysOffset);
-                    }
-                }
-
-                SaveDict(ska.UserData, ska.PosUserDataOffset);
-                SaveList(ska.UserData.Values, null, ska.UserData);
-
+                SaveSubFileFSKA(ska, ResFile.SkeletalAnims.GetSavedPos(i), i);
             }
+        }
+
+        private void SaveSubFileFSKA(SkeletalAnim ska, ResSavedPos saved_pos, int index = -1)
+        {
+            Save(ska, saved_pos, index);
+
+            SaveCustom(ska.BindIndices, () => { this.Write(ska.BindIndices); }, ska.PosBindIndicesOffset);
+
+            SaveList(ska.BoneAnims, ska.PosBoneAnimsOffset);
+
+            for (int j = 0; j < ska.BoneAnims.Count; ++j)
+            {
+                BoneAnim boneanim = ska.BoneAnims[j];
+
+                SaveCustom(boneanim.BaseData, () => { boneanim.BaseData.Save(this, boneanim.FlagsBase); }, boneanim.PosBaseDataListOffset, true);
+                SaveList(boneanim.Curves, boneanim.PosCurvesOffset, forceAdd: true);
+
+                for (int k = 0; k < boneanim.Curves.Count; ++k)
+                {
+                    AnimCurve curve = boneanim.Curves[k];
+
+                    SaveCustom(curve.Frames, () => { curve.SaveFrames(this); }, curve.PosFramesOffset);
+                    SaveCustom(curve.Keys, () => { curve.SaveKeyData(this); }, curve.PosKeysOffset);
+                }
+            }
+
+            SaveDict(ska.UserData, ska.PosUserDataOffset);
+            SaveList(ska.UserData.Values, null, ska.UserData);
         }
 
         // bone visibility
